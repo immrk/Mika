@@ -43,7 +43,7 @@ Use the same project name and -f argument for subsequent Compose commands. For r
 
 ## Connect clients
 
-The **phone** authenticates every forwarded request using its existing LAN access token (`McpSettings`). The gateway does not generate, validate, hash, synchronize or persist that access token. It forwards the Authorization header to `RemoteAccess` on the phone. Turning LAN access off does not disable an explicitly enabled remote connection. The USB-only temporary token remains limited to loopback and is not accepted remotely.
+The **phone** authenticates every forwarded request using its existing LAN access token (`McpSettings`). The gateway does not generate, validate, hash, synchronize or persist that access token. It forwards the Authorization header to `RemoteAccess` on the phone. Turning LAN access off does not disable an explicitly enabled remote connection. The USB-only temporary token remains limited to loopback and is not accepted remotely. The phone throttles invalid-token attempts on the shared relay source while allowing a valid token through its cooldown, so anonymous failures do not lock out the owner. The local listener keeps its existing address-based policy.
 
 For MCP, select **MCP → Remote** in Mika and copy the config into a client that supports custom Authorization headers. The endpoint is `https://mika.example.com/mcp`. For CLI, select **CLI / Skill → Remote**, copy the phone token into a private file on the computer, and use:
 

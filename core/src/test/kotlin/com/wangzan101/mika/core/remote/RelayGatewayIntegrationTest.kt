@@ -55,13 +55,16 @@ class RelayGatewayIntegrationTest {
             val tasks = FakeRemoteTasks()
             val endpoints = RemoteEndpoints(tasks, "integration")
             val phoneToken = AtomicReference("phone-common-access-token")
-            val access = RemoteAccess(phoneToken::get, loopbackToken = { "usb-only-token" })
+            val access = RemoteAccess(phoneToken::get, loopbackToken = { "usb-only-token" }, validTokensBypassLockout = true)
             tunnel = RelayClient(scope, { req -> access.handle(req, endpoints::handle) }, allowLoopbackHttp = true)
             tunnel.start(pairing)
             withTimeout(5_000) { tunnel.state.first { it == RelayState.Online } }
             fun post(body: String, token: String = phoneToken.get()): Pair<Int, String> =
                 http.newCall(Request.Builder().url("$base/mcp").header("Authorization", "Bearer $token")
                     .post(body.toRequestBody("application/json".toMediaType())).build()).execute().use { it.code to it.body!!.string() }
+            repeat(5) { assertEquals(401, post("{}", "anonymous-client").first) }
+            assertEquals(429, post("{}", "anonymous-client").first)
+            assertEquals(200, post("""{"jsonrpc":"2.0","id":0,"method":"tools/list"}""").first)
             assertEquals(401, post("{}", pairing.deviceToken).first)
             assertEquals(401, post("{}", "usb-only-token").first)
             val init = post("""{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"remote-check","version":"1"}}}""")

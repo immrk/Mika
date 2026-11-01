@@ -66,6 +66,16 @@ class ComputerAccessScreenTest {
         compose.onNodeWithTag("computer-remote").assertIsDisplayed()
     }
 
+    @Test fun remoteOnlyStartupFailureIsShownUntilTheRelayStarts() {
+        page(example.copy(networkEnabled = false, usbEnabled = false,
+            server = McpServerState.Failed("test-start-denied"), relayEnabled = true, relayState = RelayState.Off))
+        compose.onNodeWithText("没能开启:test-start-denied").assertIsDisplayed()
+        compose.onNodeWithText("正在连接远程网关…").assertDoesNotExist()
+        compose.runOnIdle { state.value = state.value.copy(relayState = RelayState.Online) }
+        compose.onNodeWithText("等待电脑连接").assertIsDisplayed()
+        compose.onNodeWithText("没能开启:test-start-denied").assertDoesNotExist()
+    }
+
     @Test fun remoteConnectionWaitsForActualRequestAndShowsRevocation() {
         page(example.copy(networkEnabled = false, server = McpServerState.Off, relayEnabled = true, relayState = RelayState.Online))
         compose.onNodeWithText("等待电脑连接").assertIsDisplayed()

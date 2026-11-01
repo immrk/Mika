@@ -66,7 +66,7 @@ mika --url https://mika.example.com --token-file /path/to/token task list --limi
 | 设备通道凭据 | 配对手机建立 WSS、解除配对 | 手机加密存储、网关摘要 |
 | 管理密钥 | 创建配对码、管理解除配对 | 网关私密文件、进程内摘要 |
 
-`RemoteAccess.handle` 统一鉴权和协议错误，再进入 `RemoteEndpoints`；本地监听与远程通道共用任务服务。LAN 私有地址检查保留。远程请求使用非回环来源，不获得 USB 权限。`McpRuntime` 为远程通道提供手机统一令牌，远程关闭时拒绝访问；配对本身不启用远程。
+`RemoteAccess.handle` 统一鉴权和协议错误，再进入 `RemoteEndpoints`；本地监听与远程通道共用任务服务。LAN 私有地址检查保留。远程请求使用非回环来源，不获得 USB 权限。转发通道共用来源身份，仅无效令牌受失败冷却限制，正确令牌仍可通过，避免匿名请求锁住合法客户端；本地监听原有的地址限流策略不变。`McpRuntime` 为远程通道提供手机统一令牌，远程关闭时拒绝访问；配对本身不启用远程。
 
 `RelayGateway` 校验 HTTPS 地址和配对响应，不跟随重定向。`RelayClient` 白名单放行 `/mcp`、`/api/v1` 和 `/api/v1/…` 的 GET/POST/DELETE，独立保留 query 及 Authorization、Origin、X-Mika-Client 和协议头；各端点方法、参数和任务权限由手机继续检查。网关不代理任意 URL 或 TCP。
 

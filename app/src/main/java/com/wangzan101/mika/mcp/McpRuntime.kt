@@ -50,7 +50,8 @@ class McpRuntime(
     @Volatile private var host: RemoteHost? = null
     private var hostListen = McpModes.Listen.Off
     private val endpoints = RemoteEndpoints(tasks, BuildConfig.VERSION_NAME, device = device.access)
-    private val relayAccess = RemoteAccess(token = { if (relaySettings.config.value.enabled) settings.token() else null })
+    private val relayAccess = RemoteAccess(token = { if (relaySettings.config.value.enabled) settings.token() else null },
+        validTokensBypassLockout = true)
     private val relay = RelayClient(CoroutineScope(SupervisorJob() + Dispatchers.IO), { req -> relayAccess.handle(req, endpoints::handle) })
     private val relayNetwork = RelayNetwork(context, relay::networkChanged)
     val relayState get() = relay.state

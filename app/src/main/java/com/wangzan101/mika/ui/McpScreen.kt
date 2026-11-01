@@ -178,20 +178,21 @@ private fun ConnectionStatus(ui: ComputerAccessUi) {
     val reachable = ui.server is McpServerState.Listening || ui.relayState == RelayState.Online
     val received = enabled && reachable && ui.activity.lastRequestAtMs != null
     val onlyRelay = ui.relayEnabled && !ui.networkEnabled && !ui.usbEnabled
+    val failure = (ui.server as? McpServerState.Failed)?.takeIf { !onlyRelay || ui.relayState == RelayState.Off }
     val title = when {
         !enabled -> stringResource(R.string.mcp_access_off)
+        failure != null -> stringResource(R.string.mcp_failed, failure.message)
         onlyRelay && ui.relayState == RelayState.Incompatible -> stringResource(R.string.relay_incompatible)
         onlyRelay && ui.relayState == RelayState.Unauthorized -> stringResource(R.string.relay_unauthorized)
         onlyRelay && ui.relayState == RelayState.Offline -> stringResource(R.string.relay_offline)
         onlyRelay && ui.relayState != RelayState.Online -> stringResource(R.string.relay_connecting)
-        ui.server is McpServerState.Failed && !onlyRelay -> stringResource(R.string.mcp_failed, ui.server.message)
         ui.server is McpServerState.Off && !onlyRelay -> stringResource(R.string.mcp_starting)
         received -> stringResource(R.string.mcp_request_received)
         else -> stringResource(R.string.mcp_waiting)
     }
     val detail = if (received) stringResource(R.string.mcp_last_request, clock(ui.activity.lastRequestAtMs!!))
         else stringResource(R.string.mcp_follow_steps)
-    val tone = when { ui.server is McpServerState.Failed && enabled -> TileTone.Bad; received -> TileTone.Ok; else -> TileTone.Neutral }
+    val tone = when { failure != null && enabled -> TileTone.Bad; received -> TileTone.Ok; else -> TileTone.Neutral }
     GroupCard(Modifier.testTag("computer-status")) {
         ListRow(if (received) MikaIcons.Check else MikaIcons.Desktop, title, detail, first = true, tone = tone)
     }
