@@ -1,5 +1,6 @@
 package com.wangzan101.mika.core.remote
 
+import com.wangzan101.mika.core.mcp.McpRpc
 import java.net.Inet4Address
 import java.net.Inet6Address
 import java.net.InetAddress
@@ -51,6 +52,14 @@ class RemoteAccess(
         synchronized(failures) { failures.remove(who) }
 
         return Verdict.Pass
+    }
+
+    /** 本地监听与远程转发共用鉴权和协议错误;只有通过后才进入任务层。 */
+    fun handle(req: HttpRequest, next: (HttpRequest) -> HttpResponse): HttpResponse = when (val verdict = check(req)) {
+        is Verdict.Reject -> if (req.path == McpRpc.PATH)
+            McpRpc.transportError(verdict.status, verdict.message, verdict.headers)
+        else RemoteTaskApi.error(verdict.status, "access_denied", verdict.message, verdict.headers)
+        Verdict.Pass -> next(req)
     }
 
     private fun matches(given: String, expected: String?) = !expected.isNullOrEmpty() && same(given, expected)
